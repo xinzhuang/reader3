@@ -20,6 +20,22 @@
     <div class="container">
         <h1>Library</h1>
 
+        <div class="upload-section" style="margin-bottom: 30px;">
+            <input type="file" id="epubInput" accept=".epub" style="display: none;">
+            <button onclick="document.getElementById('epubInput').click()"
+                    class="btn"
+                    style="background: #27ae60; font-size: 1em; padding: 10px 20px; margin-bottom: 10px;">
+                + Upload EPUB
+            </button>
+            <div id="uploadStatus" style="margin-top: 10px; color: #666; font-size: 0.9em;"></div>
+            <div id="uploadProgress" style="display: none; margin-top: 15px;">
+                <div style="background: #e0e0e0; border-radius: 4px; padding: 10px;">
+                    <div style="color: #666; margin-bottom: 5px;">Processing EPUB...</div>
+                    <div style="color: #999; font-size: 0.85em;">This may take a moment for large files</div>
+                </div>
+            </div>
+        </div>
+
         {% if not books %}
             <p>No processed books found. Run <code>reader3.py</code> on an epub first.</p>
         {% endif %}
@@ -37,5 +53,95 @@
             {% endfor %}
         </div>
     </div>
+
+    <script>
+    const epubInput = document.getElementById('epubInput');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const bookGrid = document.querySelector('.book-grid');
+
+    epubInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.name.toLowerCase().endsWith('.epub')) {
+            uploadStatus.textContent = '❌ Please select an EPUB file';
+            uploadStatus.style.color = '#e74c3c';
+            return;
+        }
+
+        // Show progress
+        uploadProgress.style.display = 'block';
+        uploadStatus.textContent = '';
+        epubInput.disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Upload failed');
+            }
+
+            // Add new book to grid
+            const bookCard = createBookCard(data);
+            bookGrid.insertAdjacentHTML('afterbegin', bookCard);
+
+            // Show success
+            uploadStatus.textContent = `✓ Successfully added "${data.title}"`;
+            uploadStatus.style.color = '#27ae60';
+
+            // Reset form
+            epubInput.value = '';
+
+            // Update empty state message if needed
+            const emptyState = document.querySelector('.container p');
+            if (emptyState && emptyState.textContent.includes('No processed books')) {
+                emptyState.style.display = 'none';
+            }
+
+        } catch (error) {
+            uploadStatus.textContent = `❌ ${error.message}`;
+            uploadStatus.style.color = '#e74c3c';
+        } finally {
+            uploadProgress.style.display = 'none';
+            epubInput.disabled = false;
+        }
+    });
+
+    function createBookCard(book) {
+        return `
+            <div class="book-card" style="animation: highlight 2s ease-out;">
+                <div class="book-title">${escapeHtml(book.title)}</div>
+                <div class="book-meta">
+                    ${escapeHtml(book.author)}<br>
+                    ${book.chapters} sections
+                </div>
+                <a href="/read/${book.id}/0" class="btn">Read Book</a>
+            </div>
+        `;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    </script>
+
+    <style>
+    @keyframes highlight {
+        0% { background: #fffacd; }
+        100% { background: white; }
+    }
+    </style>
 </body>
 </html>

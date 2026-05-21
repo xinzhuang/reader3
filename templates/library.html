@@ -48,7 +48,7 @@
                     {{ book.author }}<br>
                     {{ book.chapters }} sections
                 </div>
-                <a href="/read/{{ book.id }}/0" class="btn">Read Book</a>
+                <a href="{{ base_path }}/read/{{ book.id }}/0" class="btn">Read Book</a>
             </div>
             {% endfor %}
         </div>
@@ -80,7 +80,7 @@
         formData.append('file', file);
 
         try {
-            const response = await fetch('/upload', {
+            const response = await fetch('{{ base_path }}/upload', {
                 method: 'POST',
                 body: formData
             });
@@ -125,7 +125,7 @@
                     ${escapeHtml(book.author)}<br>
                     ${book.chapters} sections
                 </div>
-                <a href="/read/${book.id}/0" class="btn">Read Book</a>
+                <a href="{{ base_path }}/read/${book.id}/0" class="btn">Read Book</a>
             </div>
         `;
     }

@@ -12,11 +12,14 @@ from reader3 import Book, BookMetadata, ChapterContent, TOCEntry, process_epub, 
 import shutil
 import tempfile
 
+BASE_PATH = os.environ.get("BASE_PATH", "")
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+# Expose BASE_PATH to all templates as a Jinja2 global
+templates.env.globals["base_path"] = BASE_PATH
 
 # Where are the book folders located?
-BOOKS_DIR = '/Users/zxz/Documents/Ebook/chatbook'
+BOOKS_DIR = './chatbook'
 
 
 @lru_cache(maxsize=10)

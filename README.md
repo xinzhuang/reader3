@@ -22,6 +22,22 @@ uv run server.py
 
 And visit [localhost:8123](http://localhost:8123/) to see your current Library. You can easily add more books, or delete them from your library by deleting the folder. It's not supposed to be complicated or complex.
 
+## Remote Deployment with Tailscale Serve
+
+If you're exposing the server behind a reverse proxy with a subpath (e.g. Tailscale Serve), set the `BASE_PATH` environment variable to match the proxy prefix:
+
+```bash
+BASE_PATH=/reader uv run server.py
+```
+
+For example, with Tailscale Serve:
+
+```bash
+tailscale serve /reader proxy http://localhost:8123
+```
+
+This makes all internal URLs (navigation, uploads, etc.) include the `/reader` prefix so they work correctly through the proxy. Without `BASE_PATH`, the server runs at root as usual.
+
 ## License
 
 MIT
